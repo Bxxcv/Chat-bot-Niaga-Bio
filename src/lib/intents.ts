@@ -208,7 +208,7 @@ export const INTENTS: Intent[] = [
     answer:
       "Kadang memang lebih enak ngobrol sama orang langsung — nggak apa-apa, tim NiagaBio siap bantu. Kami online Senin–Sabtu, jam 09.00–17.00 WIB.",
     steps: [
-      "WhatsApp: klik tombol Chat Admin di atas halaman ini",
+      "WhatsApp: 085191245042",
       "Email: halo@niagabio.id — dibalas kurang dari 24 jam",
       "Sertakan nama toko dan screenshot masalahnya biar cepat ditangani",
     ],
