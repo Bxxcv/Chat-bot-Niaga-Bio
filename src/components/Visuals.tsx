@@ -95,7 +95,7 @@ function PlansMock() {
       <div className="relative rounded-2xl bg-forest p-4 text-white shadow-soft">
         <span className="absolute -top-2 right-3 rounded-full bg-brand px-2.5 py-0.5 text-[10px] font-bold text-white shadow-brand">Populer</span>
         <p className="font-display text-sm font-extrabold">Premium</p>
-        <p className="font-display text-xl font-extrabold">Rp 80rb<span className="text-xs font-semibold text-emerald-200">/bulan</span></p>
+        <p className="font-display text-xl font-extrabold">Rp 80rb/bulan<span className="text-xs font-semibold text-emerald-200">/bulan</span></p>
         <ul className="mt-2.5 space-y-1.5 text-xs text-emerald-100">
           {["Produk katalog tanpa batas", "Semua tema premium", "Statistik penjualan lengkap", "Prioritas bantuan admin"].map((f) => (
             <li key={f} className="flex items-start gap-1.5">
