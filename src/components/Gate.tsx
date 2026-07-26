@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import type { Profile } from "../lib/intents";
+import type { Audience, Profile } from "../lib/intents";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export default function Gate({ onEnter }: { onEnter: (p: Profile) => void }) {
+  const [audience, setAudience] = useState<Audience | null>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [store, setStore] = useState("");
@@ -12,13 +13,13 @@ export default function Gate({ onEnter }: { onEnter: (p: Profile) => void }) {
 
   const nameOk = name.trim().length >= 2;
   const emailOk = EMAIL_RE.test(email.trim());
-  const valid = nameOk && emailOk;
+  const valid = nameOk && emailOk && !!audience;
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     setTouched(true);
     if (!valid) return;
-    onEnter({ name: name.trim(), email: email.trim(), store: store.trim() || undefined });
+    onEnter({ name: name.trim(), email: email.trim(), store: store.trim() || undefined, audience: audience! });
   };
 
   return (
@@ -46,6 +47,43 @@ export default function Gate({ onEnter }: { onEnter: (p: Profile) => void }) {
 
           {/* form */}
           <form onSubmit={submit} noValidate className="space-y-3.5 px-6 pb-7 pt-5">
+            <div>
+              <label className="mb-1.5 flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-wide text-forest-soft">
+                <i className="bi bi-signpost-split" /> Kamu yang mana?
+              </label>
+              <div className="grid grid-cols-2 gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setAudience("guest")}
+                  className={`rounded-2xl border px-3 py-3 text-left transition-all ${
+                    audience === "guest"
+                      ? "border-brand bg-mint shadow-brand/10"
+                      : "border-mint-line bg-cream hover:border-brand/60"
+                  }`}
+                >
+                  <i className={`bi bi-compass mb-1 block text-[18px] ${audience === "guest" ? "text-brand-deep" : "text-ink-soft"}`} />
+                  <span className="block text-[13px] font-bold text-ink">Belum daftar</span>
+                  <span className="block text-[11px] text-ink-soft">Masih lihat-lihat dulu</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAudience("member")}
+                  className={`rounded-2xl border px-3 py-3 text-left transition-all ${
+                    audience === "member"
+                      ? "border-brand bg-mint shadow-brand/10"
+                      : "border-mint-line bg-cream hover:border-brand/60"
+                  }`}
+                >
+                  <i className={`bi bi-shop mb-1 block text-[18px] ${audience === "member" ? "text-brand-deep" : "text-ink-soft"}`} />
+                  <span className="block text-[13px] font-bold text-ink">Sudah punya toko</span>
+                  <span className="block text-[11px] text-ink-soft">Sudah daftar & login</span>
+                </button>
+              </div>
+              {touched && !audience && (
+                <p className="mt-1.5 flex items-center gap-1 text-[12px] text-red-500"><i className="bi bi-exclamation-circle" /> Pilih salah satu dulu ya.</p>
+              )}
+            </div>
+
             <div>
               <label htmlFor="g-name" className="mb-1.5 flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-wide text-forest-soft">
                 <i className="bi bi-person" /> Nama kamu
@@ -81,19 +119,21 @@ export default function Gate({ onEnter }: { onEnter: (p: Profile) => void }) {
               )}
             </div>
 
-            <div>
-              <label htmlFor="g-store" className="mb-1.5 flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-wide text-forest-soft">
-                <i className="bi bi-shop" /> Nama toko
-                <span className="rounded-full bg-cream-deep px-2 py-0.5 text-[10px] font-semibold normal-case tracking-normal text-ink-soft">opsional</span>
-              </label>
-              <input
-                id="g-store"
-                value={store}
-                onChange={(e) => setStore(e.target.value)}
-                placeholder="cth: Berkah Alami"
-                className="h-12 w-full rounded-2xl border border-mint-line bg-cream px-4 text-[15px] text-ink outline-none transition-colors placeholder:text-ink-soft/50 focus:border-brand focus:bg-white"
-              />
-            </div>
+            {audience === "member" && (
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} transition={{ duration: 0.22 }}>
+                <label htmlFor="g-store" className="mb-1.5 flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-wide text-forest-soft">
+                  <i className="bi bi-shop" /> Nama toko
+                  <span className="rounded-full bg-cream-deep px-2 py-0.5 text-[10px] font-semibold normal-case tracking-normal text-ink-soft">opsional</span>
+                </label>
+                <input
+                  id="g-store"
+                  value={store}
+                  onChange={(e) => setStore(e.target.value)}
+                  placeholder="cth: Berkah Alami"
+                  className="h-12 w-full rounded-2xl border border-mint-line bg-cream px-4 text-[15px] text-ink outline-none transition-colors placeholder:text-ink-soft/50 focus:border-brand focus:bg-white"
+                />
+              </motion.div>
+            )}
 
             <button
               type="submit"

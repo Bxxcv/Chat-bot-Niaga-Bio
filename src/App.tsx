@@ -1,25 +1,41 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { matchIntent, intentById, personalize, CHIP_MAP, type Intent, type Profile } from "./lib/intents";
+import { matchIntent, intentById, backToStart, personalize, CHIP_MAP, type Intent, type Profile } from "./lib/intents";
 import { UserBubble, BotCard, TypingBubble, type ChatMsg } from "./components/ChatMessage";
 import Gate from "./components/Gate";
 
-const QUICK_ACTIONS = [
+const QUICK_ACTIONS_GUEST = [
   { label: "Daftar Gratis", icon: "bi-person-plus-fill", primary: true, chip: "Cara daftar akun" },
   { label: "Lihat Demo", icon: "bi-play-circle", primary: false, chip: "Lihat demo" },
   { label: "Chat Admin", icon: "bi-headset", primary: false, chip: "Chat admin" },
   { label: "Beranda", icon: "bi-house", primary: false, chip: "Ini website apa?" },
 ];
 
-const STARTER_CHIPS = [
+const QUICK_ACTIONS_MEMBER = [
+  { label: "Upload Produk", icon: "bi-box-seam", primary: true, chip: "Cara upload produk" },
+  { label: "Cek Pesanan", icon: "bi-receipt", primary: false, chip: "Cara lihat pesanan" },
+  { label: "Chat Admin", icon: "bi-headset", primary: false, chip: "Chat admin" },
+  { label: "Beranda", icon: "bi-house", primary: false, chip: "Kembali ke awal" },
+];
+
+const STARTER_CHIPS_GUEST = [
   "Ini website apa?",
   "Cara daftar akun",
-  "Cara bikin toko",
-  "Cara upload produk",
-  "Cara kerja checkout",
+  "Cara mulai bikin toko",
   "Paket gratis vs premium",
+  "Apa itu halaman publik toko?",
+  "Lihat demo",
   "Lupa password",
-  "Troubleshooting error",
+];
+
+const STARTER_CHIPS_MEMBER = [
+  "Cara upload produk",
+  "Cara lihat pesanan",
+  "Cara kerja checkout",
+  "Cara edit profil toko",
+  "Ganti template",
+  "Troubleshooting akun",
+  "Paket gratis vs premium",
 ];
 
 const PROFILE_KEY = "nb-chat-profile";
@@ -29,7 +45,7 @@ function loadProfile(): Profile | null {
     const raw = localStorage.getItem(PROFILE_KEY);
     if (!raw) return null;
     const p = JSON.parse(raw);
-    if (typeof p?.name === "string" && typeof p?.email === "string") return p;
+    if (typeof p?.name === "string" && typeof p?.email === "string" && (p?.audience === "guest" || p?.audience === "member")) return p;
   } catch {
     /* ignore */
   }
@@ -67,11 +83,15 @@ export default function App() {
 
   const send = (raw: string) => {
     const text = raw.trim();
-    if (!text || typing) return;
+    if (!text || typing || !profile) return;
     setMessages((m) => [...m, { id: idCounter++, role: "user", text }]);
     setInput("");
+    if (text === "Kembali ke awal") {
+      respond(backToStart(profile.audience));
+      return;
+    }
     const mapped = CHIP_MAP[text];
-    respond(mapped ? intentById(mapped) : matchIntent(text));
+    respond(mapped ? intentById(mapped) : matchIntent(text, profile.audience));
   };
 
   const enter = (p: Profile) => {
@@ -128,7 +148,7 @@ export default function App() {
 
           {/* quick actions */}
           <div className="nb-chip-row -mx-4 mt-3 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-            {QUICK_ACTIONS.map(({ label, icon, primary, chip }) => (
+            {(profile.audience === "member" ? QUICK_ACTIONS_MEMBER : QUICK_ACTIONS_GUEST).map(({ label, icon, primary, chip }) => (
               <button
                 key={label}
                 onClick={() => send(chip)}
@@ -167,8 +187,9 @@ export default function App() {
                     Hai <span className="text-brand-deep">{firstName}</span>, aku Nia
                   </h2>
                   <p className="mx-auto mt-2 max-w-md text-[14.5px] leading-relaxed text-ink-soft">
-                    Tanya apa saja soal link bio toko, katalog produk, checkout QRIS,
-                    sampai paket harga. Aku jawab dengan bahasa yang gampang dipahami.
+                    {profile.audience === "member"
+                      ? "Tanya apa aja soal tokomu — upload produk, cek pesanan masuk, checkout QRIS, sampai ganti tema. Aku jawab ringkas dulu, detailnya tinggal dibuka."
+                      : "Tanya apa saja soal link bio toko, katalog produk, checkout QRIS, sampai paket harga. Aku jawab dengan bahasa yang gampang dipahami."}
                   </p>
                   <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-[11.5px] font-semibold text-forest-soft">
                     <span className="flex items-center gap-1.5 rounded-full bg-mint px-3 py-1.5"><i className="bi bi-lightning-charge" /> Jawaban instan</span>
@@ -179,11 +200,18 @@ export default function App() {
 
                 {/* feature preview strip */}
                 <div className="grid gap-2.5 border-t border-cream-deep p-4 sm:grid-cols-3 sm:p-5">
-                  {[
-                    { chip: "Lihat demo", img: "/assets/illustrator/mockup-dashboard.jpg", t: "Dashboard seller", d: "Pantau produk & pesanan" },
-                    { chip: "Cara upload produk", img: "/assets/img/preview/2.jpg", t: "Katalog produk", d: "Rapi di layar HP pembeli" },
-                    { chip: "Cara kerja checkout", img: null, t: "Checkout QRIS", d: "Manual, tanpa potongan" },
-                  ].map((c) => (
+                  {(profile.audience === "member"
+                    ? [
+                        { chip: "Cara upload produk", img: "/assets/img/preview/2.jpg", t: "Upload produk", d: "Tambah ke katalogmu" },
+                        { chip: "Cara lihat pesanan", img: "/assets/illustrator/mockup-dashboard.jpg", t: "Pesanan masuk", d: "Pantau & proses di dashboard" },
+                        { chip: "Cara kerja checkout", img: null, t: "Checkout QRIS", d: "Manual, tanpa potongan" },
+                      ]
+                    : [
+                        { chip: "Lihat demo", img: "/assets/illustrator/mockup-dashboard.jpg", t: "Dashboard seller", d: "Pantau produk & pesanan" },
+                        { chip: "Cara upload produk", img: "/assets/img/preview/2.jpg", t: "Katalog produk", d: "Rapi di layar HP pembeli" },
+                        { chip: "Cara kerja checkout", img: null, t: "Checkout QRIS", d: "Manual, tanpa potongan" },
+                      ]
+                  ).map((c) => (
                     <button
                       key={c.t}
                       onClick={() => send(c.chip)}
@@ -228,7 +256,7 @@ export default function App() {
       <footer className="relative z-10 shrink-0 border-t border-mint-line/70 bg-white/85 pb-[max(env(safe-area-inset-bottom),12px)] backdrop-blur-xl">
         <div className="mx-auto w-full max-w-3xl px-4 sm:px-6">
           <div className="nb-chip-row -mx-4 flex gap-2 overflow-x-auto px-4 pt-3 sm:mx-0 sm:px-0">
-            {STARTER_CHIPS.map((c) => (
+            {(profile.audience === "member" ? STARTER_CHIPS_MEMBER : STARTER_CHIPS_GUEST).map((c) => (
               <button
                 key={c}
                 onClick={() => send(c)}
