@@ -4,20 +4,6 @@ import { matchIntent, intentById, backToStart, personalize, CHIP_MAP, type Inten
 import { UserBubble, BotCard, TypingBubble, type ChatMsg } from "./components/ChatMessage";
 import Gate from "./components/Gate";
 
-const QUICK_ACTIONS_GUEST = [
-  { label: "Daftar Gratis", icon: "bi-person-plus-fill", primary: true, chip: "Cara daftar akun" },
-  { label: "Lihat Demo", icon: "bi-play-circle", primary: false, chip: "Lihat demo" },
-  { label: "Chat Admin", icon: "bi-headset", primary: false, chip: "Chat admin" },
-  { label: "Beranda", icon: "bi-house", primary: false, chip: "Ini website apa?" },
-];
-
-const QUICK_ACTIONS_MEMBER = [
-  { label: "Upload Produk", icon: "bi-box-seam", primary: true, chip: "Cara upload produk" },
-  { label: "Cek Pesanan", icon: "bi-receipt", primary: false, chip: "Cara lihat pesanan" },
-  { label: "Chat Admin", icon: "bi-headset", primary: false, chip: "Chat admin" },
-  { label: "Beranda", icon: "bi-house", primary: false, chip: "Kembali ke awal" },
-];
-
 const STARTER_CHIPS_GUEST = [
   "Ini website apa?",
   "Cara daftar akun",
@@ -144,24 +130,6 @@ export default function App() {
               <i className="bi bi-person-gear" />
             </button>
             <img src="/assets/illustrator/niagabio-logo.svg" alt="NiagaBio" className="hidden h-8 sm:block" />
-          </div>
-
-          {/* quick actions */}
-          <div className="nb-chip-row -mx-4 mt-3 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-            {(profile.audience === "member" ? QUICK_ACTIONS_MEMBER : QUICK_ACTIONS_GUEST).map(({ label, icon, primary, chip }) => (
-              <button
-                key={label}
-                onClick={() => send(chip)}
-                className={
-                  primary
-                    ? "flex shrink-0 items-center gap-1.5 rounded-full bg-brand px-4 py-2 text-[13px] font-bold text-white shadow-brand transition-transform hover:-translate-y-0.5 active:translate-y-0"
-                    : "flex shrink-0 items-center gap-1.5 rounded-full border border-mint-line bg-white px-4 py-2 text-[13px] font-semibold text-forest-soft transition-all hover:-translate-y-0.5 hover:border-brand hover:bg-mint active:translate-y-0"
-                }
-              >
-                <i className={`bi ${icon} text-[14px]`} />
-                {label}
-              </button>
-            ))}
           </div>
         </div>
       </header>
